@@ -1,9 +1,14 @@
 #!/bin/sh
 
-# If you would like to do some extra provisioning you may
-# add any commands you wish to this file and they will
-# be run after the Homestead machine is provisioned.
-#
-# If you have user-specific configurations you would like
-# to apply, you may also create user-customizations.sh,
-# which will be run after this script.
+/usr/bin/php /home/vagrant/code/artisan migrate
+
+
+sudo touch /etc/supervisor/conf.d/artisan_queue.conf
+sudo echo "[program:worker]
+command=/usr/bin/php /home/vagrant/code/artisan queue:work
+autostart=true
+autorestart=true
+user=www-data
+stopsignal=KILL
+numprocs=1" > /etc/supervisor/conf.d/artisan_queue.conf
+sudo /etc/init.d/supervisor restart
