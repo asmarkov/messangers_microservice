@@ -10,7 +10,4 @@
 | and give it the Closure to call when that URI is requested.
 |
 */
-
-$router->get('/', function () use ($router) {
-    return $router->app->version();
-});
+\Illuminate\Support\Facades\Route::post('/', "Controller@add_message");
