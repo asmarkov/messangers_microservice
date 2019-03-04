@@ -23,7 +23,7 @@ class SendMessage extends Job
     {
         $this->message = $message;
         if(!is_null($message->wakeup)) {
-            $delay = strtotime($message->wakeup)-time();
+            $delay = strtotime($message->wakeup) - time();
             if($delay > 0) {
                 $this->delay($delay);
             }
@@ -38,21 +38,19 @@ class SendMessage extends Job
     {
         $this->message->message_status = Messages::STATUS_IN_PROCESS;
         $this->message->save();
+        $this->message->try_count++;
         try {
             $gate = SenderFactory::factory($this->message);
             $gate->send();
+            $this->message->message_status = Messages::STATUS_SEND;
+            $this->message->save();
         }
         catch (\Exception $e) {
-            $this->message->try_count++;
             $this->message->error_code = $e->getCode();
             $this->message->message_status = Messages::STATUS_ERROR;
             $this->message->error_message = $e->getMessage();
             $this->message->save();
-            throw $e;
+            $this->release(15);
         }
-        $this->message->try_count++;
-        $this->message->message_status = Messages::STATUS_SEND;
-        $this->message->save();
-
     }
 }
